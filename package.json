@@ -1,12 +1,14 @@
 {
-  "name": "react_pro",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "campuscollab",
+  "version": "1.0.0",
+  "description": "CampusCollab — Student Collaboration & Hackathon Platform",
   "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "node backend/server.js",
+    "build:frontend": "npm run build --prefix frontend",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
     "dev": "vite",
     "build": "vite build",
-    "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
