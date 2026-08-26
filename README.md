@@ -4,29 +4,20 @@
 
 ---
 
-## 📌 The Problem
+##  The Problem
 
-College students and aspiring developers often face significant challenges when preparing for hackathons and software competitions:
+Students often struggle to discover hackathons, find teammates with complementary skills, and coordinate project development after forming a team.
 
-1. **Skill Isolation & Team Imbalance**: Students often form teams only with close friends who share identical skills (e.g., three frontend developers and no backend or AI/ML specialist), leading to critical technical gaps during competition time.
-2. **Fragmented Event Discovery**: Hackathon notices and competition deadlines are scattered across disparate social media groups, university noticeboards, and various platforms.
-3. **Lack of Pre-Hackathon Coordination**: After forming a team, students lack a lightweight, dedicated workspace to plan feature tasks, track milestone progress, and link GitHub repositories before the hackathon begins.
 
 ---
 
-## 💡 The Solution
+##  The Solution
+CampusCollab is a student collaboration platform that brings hackathon discovery, skill-based teammate matching, team formation, project task management, and GitHub integration into one platform.
 
-**CampusCollab** bridges this gap with an intuitive, student-friendly platform:
-
-- **Rule-Based Complementary Skill Matching**: Automatically analyzes team technical requirements against member skill sets to detect missing skills and suggest peers who fill those exact gaps.
-- **Unified Hackathon Hub**: Discover verified campus hackathons, curated Unstop competitions, and global tech events with official registration links.
-- **Team Workspaces & Invitation System**: Form squads, review join requests, send invitations, and track team readiness.
-- **Hackathon Project Task Board**: Manage features in a 3-column workflow (`Todo`, `In Progress`, `Completed`) with progress tracking.
-- **Form-Based Admin Verification**: Allows campus coordinators and administrators to add, verify, and manage official hackathons directly through a simple form.
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 | Layer | Technologies Used |
 |---|---|
@@ -38,33 +29,15 @@ College students and aspiring developers often face significant challenges when 
 
 ---
 
-## 🚀 Key Features
+##  Key Features
 
-### 1. 🎯 Direct Student Dashboard
-- Instant view of all registered hackathons, squads, and teammates.
-- Linked project workspaces with task progress percentages.
-- One-click project creation pre-filled with team details.
-- Notification center for incoming and outgoing team invitations.
-
-### 2. 🔍 Hackathon Discovery & Source Filter
-- Dropdown selector for **Campus Verified Hackathons**, **Unstop Competitions**, and **Global Tech Events**.
-- Search by hackathon name, tech themes (AI, Cloud, Web3), or mode (Online, Offline, Hybrid).
-- Direct redirection to official organizers for genuine registration.
-
-### 3. 👥 Squad Formation & Skill-Gap Analysis
-- Calculates team skill coverage percentage:
-  $$\text{Coverage} = \left( \frac{\text{Covered Skills}}{\text{Required Skills}} \right) \times 100$$
-- Visual indicators for covered skills (Emerald) vs missing skills (Amber).
-- Explains why a peer is recommended (e.g., *"Matches team requirements for Python and Machine Learning which your team currently needs"*).
-
-### 4. 📋 Project Workspace & Kanban Feature Tracker
-- 3-column status board: `Todo`, `In Progress`, and `Completed`.
-- Task priority markers: `Low`, `Medium`, `High`.
-- Repository & Live Demo showcase with collaborator request management.
-
-### 5. 🛡️ Admin Verification & Form-Based Hackathon Management
-- Choose **Account Type: Campus Coordinator / Admin** during registration to gain full privileges.
-- Add campus verified hackathons directly using the form with name, organizer, mode, dates, prize pool, and official registration URL.
+- **Hackathon Discovery** – Discover campus, Unstop, and other hackathons with source filtering and direct registration links.
+- **Skill-Based Team Matching** – Find teammates based on complementary technical skills and identify missing skills in a team.
+- **Team Invitations & Requests** – Create teams, invite students, and manage join requests.
+- **Project Workspace** – Create projects, assign team tasks, and track work using a Todo, In Progress, and Completed workflow.
+- **GitHub Integration** – Add GitHub profiles and connect project repositories for development collaboration.
+- **Admin Hackathon Management** – Admins can add, verify, and manage hackathons through a form-based interface.
+- **Authentication** – Secure registration, login, JWT-based sessions, and role-based access.
 
 ---
 
@@ -128,21 +101,3 @@ npm run dev
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
-
-## 📡 REST API Summary
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/auth/register` | `POST` | Register a new student or admin account |
-| `/api/auth/login` | `POST` | Authenticate user & return JWT token |
-| `/api/dashboard` | `GET` | Retrieve registered hackathons, squads, and projects |
-| `/api/hackathons` | `GET`, `POST` | List and create verified hackathons |
-| `/api/teams` | `GET`, `POST` | Browse squads and initialize new hackathon team |
-| `/api/teams/:id/invite` | `POST` | Send invitation to a peer student |
-| `/api/projects` | `GET`, `POST` | List campus projects and create team workspace |
-| `/api/projects/:id/tasks` | `POST`, `PUT`, `DELETE` | Manage feature backlog tasks |
-
----
-
-## 📄 License
-Distributed under the MIT License. Feel free to use and adapt for academic and student collaboration purposes.
