@@ -51,24 +51,7 @@ function Invitations() {
       <div
         className="container"
       >
-        {/* Header */}
-        <div
-          className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"
-        >
-          <div>
-            <h3
-              className="fw-bold text-primary mb-1"
-            >
-              Team Invitations
-            </h3>
 
-            <p
-              className="text-muted mb-0 small"
-            >
-              Manage incoming invitations from squad leaders and track outgoing invites.
-            </p>
-          </div>
-        </div>
 
         {successMsg && (
           <div

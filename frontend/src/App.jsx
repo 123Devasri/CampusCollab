@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -18,6 +19,9 @@ import Teammates from "./pages/Teammates";
 import Invitations from "./pages/Invitations";
 import Project from "./pages/Project";
 import ProjectDetails from "./pages/ProjectDetails";
+import PathfinderLanding from "./pages/PathfinderLanding";
+import PathfinderCreate from "./pages/PathfinderCreate";
+import PathfinderDetails from "./pages/PathfinderDetails";
 
 function App() {
   return (
@@ -53,6 +57,16 @@ function App() {
             />
 
             <Route
+              path="/admin-login"
+              element={<AdminLogin />}
+            />
+
+            <Route
+              path="/admin/login"
+              element={<AdminLogin />}
+            />
+
+            <Route
               path="/register"
               element={<Register />}
             />
@@ -68,17 +82,29 @@ function App() {
 
             <Route
               path="/profile/:id"
-              element={<StudentProfile />}
+              element={
+                <ProtectedRoute>
+                  <StudentProfile />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/hackathons"
-              element={<Hackathon />}
+              element={
+                <ProtectedRoute>
+                  <Hackathon />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/hackathons/:id"
-              element={<HackathonDetails />}
+              element={
+                <ProtectedRoute>
+                  <HackathonDetails />
+                </ProtectedRoute>
+              }
             />
 
             <Route
@@ -92,22 +118,30 @@ function App() {
 
             <Route
               path="/teams"
-              element={<Teams />}
+              element={
+                <ProtectedRoute>
+                  <Teams />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/teams/:id"
-              element={<TeamDetails />}
+              element={
+                <ProtectedRoute>
+                  <TeamDetails />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/teammates"
-              element={<Teammates />}
+              element={<Navigate to="/teams?tab=teammates" replace />}
             />
 
             <Route
               path="/students"
-              element={<Navigate to="/teammates" replace />}
+              element={<Navigate to="/teams?tab=teammates" replace />}
             />
 
             <Route
@@ -121,12 +155,47 @@ function App() {
 
             <Route
               path="/projects"
-              element={<Project />}
+              element={
+                <ProtectedRoute>
+                  <Project />
+                </ProtectedRoute>
+              }
             />
 
             <Route
               path="/projects/:id"
-              element={<ProjectDetails />}
+              element={
+                <ProtectedRoute>
+                  <ProjectDetails />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/pathfinder"
+              element={
+                <ProtectedRoute>
+                  <PathfinderLanding />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/pathfinder/create"
+              element={
+                <ProtectedRoute>
+                  <PathfinderCreate />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/pathfinder/:id"
+              element={
+                <ProtectedRoute>
+                  <PathfinderDetails />
+                </ProtectedRoute>
+              }
             />
 
             <Route

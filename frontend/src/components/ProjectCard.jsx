@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import SkillBadge from "./SkillBadge";
 
-function ProjectCard({ project }) {
+function ProjectCard({ project, onEdit, canEdit }) {
   if (!project) return null;
 
   const getStatusBadge = (status) => {
@@ -137,7 +137,7 @@ function ProjectCard({ project }) {
               rel="noreferrer"
               className="text-decoration-none small text-dark fw-semibold"
             >
-              GitHub: {project.githubUrl.replace(/^https?:\/\/github\.com\//, "")} ↗
+              GitHub: {project.githubUrl.replace(/^https?:\/\/github\.com\//, "")}
             </a>
           </div>
         )}
@@ -151,6 +151,16 @@ function ProjectCard({ project }) {
           >
             Open Workspace
           </Link>
+          {canEdit && onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(project)}
+              className="btn btn-sm btn-outline-secondary"
+              title="Update this project card"
+            >
+              Edit
+            </button>
+          )}
         </div>
       </div>
     </div>

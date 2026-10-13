@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import LoadingState from "../components/LoadingState";
 import SkillBadge from "../components/SkillBadge";
@@ -11,6 +11,8 @@ function StudentProfile() {
   const [githubRepos, setGithubRepos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStudentProfile = async () => {
@@ -53,12 +55,13 @@ function StudentProfile() {
           {error || "Student profile not found."}
         </div>
 
-        <Link
-          to="/teammates"
-          className="btn btn-primary-custom"
+        <button
+          onClick={() => navigate(-1)}
+          className="btn btn-primary-custom d-inline-flex align-items-center gap-1"
         >
-          Back to Teammates
-        </Link>
+          <span>←</span>
+          <span>Back</span>
+        </button>
       </div>
     );
   }
@@ -159,12 +162,14 @@ function StudentProfile() {
             <div
               className="text-center text-md-end"
             >
-              <Link
-                to="/teammates"
-                className="btn btn-outline-secondary btn-sm"
+              <button
+                onClick={() => navigate(-1)}
+                className="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1"
+                title="Go Back"
               >
-                Back to Students
-              </Link>
+                <span>←</span>
+                <span>Back</span>
+              </button>
             </div>
           </div>
         </div>

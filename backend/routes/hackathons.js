@@ -54,7 +54,7 @@ router.get("/external", async (req, res) => {
   }
 });
 
-// GET /api/hackathons - List all hackathons from database with filtering
+// GET /api/hackathons - List all hackathons from database with filtering and registered teams
 router.get("/", async (req, res) => {
   try {
     const { search, mode, technology } = req.query;
@@ -77,8 +77,57 @@ router.get("/", async (req, res) => {
       query.technology = { $regex: technology, $options: "i" };
     }
 
-    const hackathons = await Hackathon.find(query).sort({ createdAt: -1 });
-    res.json(hackathons);
+    const hackathons = await Hackathon.find(query).sort({ createdAt: -1 }).lean();
+
+    // Fetch all teams registered for these hackathons
+    const hackathonIds = hackathons.map((h) => h._id);
+    const teams = await Team.find({ hackathon: { $in: hackathonIds } })
+      .populate("members.user", "name email primaryRole avatar college course year skills")
+      .populate("createdBy", "name email primaryRole avatar")
+      .lean();
+
+    // Group teams by hackathon ID
+    const teamsByHackathon = {};
+    teams.forEach((t) => {
+      const hId = String(t.hackathon);
+      if (!teamsByHackathon[hId]) {
+        teamsByHackathon[hId] = [];
+      }
+      teamsByHackathon[hId].push(t);
+    });
+
+    // Attach registered teams and users to each hackathon
+    const hackathonsWithTeams = hackathons.map((h) => {
+      const regTeams = teamsByHackathon[String(h._id)] || [];
+      const allMembers = [];
+      const seenUserIds = new Set();
+
+      regTeams.forEach((t) => {
+        (t.members || []).forEach((m) => {
+          if (m.user && !seenUserIds.has(String(m.user._id || m.user))) {
+            seenUserIds.add(String(m.user._id || m.user));
+            allMembers.push({
+              userId: m.user._id || m.user,
+              name: m.user.name || "Member",
+              role: m.role || m.user.primaryRole || "Developer",
+              teamName: t.name,
+              college: m.user.college,
+              skills: m.user.skills || []
+            });
+          }
+        });
+      });
+
+      return {
+        ...h,
+        registeredTeams: regTeams,
+        registeredUsers: allMembers,
+        registeredTeamsCount: regTeams.length,
+        registeredUsersCount: allMembers.length
+      };
+    });
+
+    res.json(hackathonsWithTeams);
   } catch (error) {
     console.error("Fetch Hackathons Error:", error);
     res.status(500).json({

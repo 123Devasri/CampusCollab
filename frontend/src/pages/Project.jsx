@@ -26,10 +26,11 @@ function Project() {
     liveUrl: "",
     status: "Planning"
   });
+  const [editingProject, setEditingProject] = useState(null);
   const [creating, setCreating] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const fetchProjects = async () => {
@@ -41,7 +42,20 @@ function Project() {
           status: statusFilter !== "All" ? statusFilter : undefined
         }
       });
-      setProjects(res.data);
+      
+      // Deduplicate: Guarantee exactly one card per unique project in the project tab
+      const uniqueMap = new Map();
+      (res.data || []).forEach((p) => {
+        const normalizedTitle = (p.title || "").trim().toLowerCase().replace(/\s+\(workspace\)$/i, "");
+        const teamId = p.team ? String(p.team._id || p.team) : null;
+        const key = teamId ? `team_${teamId}_${normalizedTitle}` : `title_${normalizedTitle}`;
+
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, p);
+        }
+      });
+
+      setProjects(Array.from(uniqueMap.values()));
     } catch (err) {
       console.error("Projects load error:", err);
     } finally {
@@ -80,12 +94,54 @@ function Project() {
       navigate("/login");
       return;
     }
+    setEditingProject(null);
+    setForm({
+      title: "",
+      description: "",
+      teamId: "",
+      role: "Lead Developer",
+      techStack: "React, Node.js, MongoDB",
+      githubUrl: "",
+      liveUrl: "",
+      status: "Planning"
+    });
+    setShowModal(true);
+  };
+
+  const handleEditProject = (project) => {
+    setEditingProject(project);
+    setForm({
+      title: project.title,
+      description: project.description,
+      teamId: project.team?._id || project.team || "",
+      role: project.role || "Lead Developer",
+      techStack: (project.techStack || []).join(", "),
+      githubUrl: project.githubUrl || "",
+      liveUrl: project.liveUrl || "",
+      status: project.status || "Planning"
+    });
     setShowModal(true);
   };
 
   const handleTeamSelect = (selectedTeamId) => {
     const selected = myTeams.find((t) => t._id === selectedTeamId);
-    if (selected) {
+    // If a project already exists for this team, update that existing card!
+    const existingForTeam = projects.find((p) => (p.team?._id || p.team) === selectedTeamId);
+
+    if (existingForTeam) {
+      setEditingProject(existingForTeam);
+      setForm({
+        title: existingForTeam.title,
+        description: existingForTeam.description,
+        teamId: selectedTeamId,
+        role: existingForTeam.role || "Lead Developer",
+        techStack: (existingForTeam.techStack || []).join(", "),
+        githubUrl: existingForTeam.githubUrl || "",
+        liveUrl: existingForTeam.liveUrl || "",
+        status: existingForTeam.status || "Planning"
+      });
+    } else if (selected) {
+      setEditingProject(null);
       setForm({
         ...form,
         teamId: selected._id,
@@ -94,6 +150,7 @@ function Project() {
         techStack: (selected.requiredSkills || []).join(", ")
       });
     } else {
+      setEditingProject(null);
       setForm({
         ...form,
         teamId: ""
@@ -114,7 +171,8 @@ function Project() {
 
     try {
       setCreating(true);
-      await API.post("/projects", {
+      const res = await API.post("/projects", {
+        projectId: editingProject?._id || undefined,
         ...form,
         techStack: techArr,
         teamId: form.teamId || null,
@@ -122,7 +180,8 @@ function Project() {
       });
 
       setShowModal(false);
-      setSuccessMsg(`Project '${form.title}' created successfully.`);
+      setSuccessMsg(res.data.isUpdated ? `Project '${form.title}' updated successfully.` : `Project '${form.title}' created successfully.`);
+      setEditingProject(null);
       setForm({
         title: "",
         description: "",
@@ -136,8 +195,8 @@ function Project() {
       fetchProjects();
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err) {
-      console.error("Create project error:", err);
-      alert(err.response?.data?.message || "Failed to create project.");
+      console.error("Save project error:", err);
+      alert(err.response?.data?.message || "Failed to save project.");
     } finally {
       setCreating(false);
     }
@@ -150,24 +209,9 @@ function Project() {
       <div
         className="container"
       >
-        {/* Header */}
         <div
-          className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"
+          className="d-flex justify-content-end mb-3"
         >
-          <div>
-            <h3
-              className="fw-bold text-primary mb-1"
-            >
-              Project Workspaces
-            </h3>
-
-            <p
-              className="text-muted mb-0 small"
-            >
-              Collaborate on hackathon projects with your squad, track feature progress, and build together.
-            </p>
-          </div>
-
           <button
             onClick={handleOpenAddProject}
             className="btn btn-primary-custom fw-semibold shadow-sm"
@@ -272,6 +316,8 @@ function Project() {
               >
                 <ProjectCard
                   project={project}
+                  onEdit={handleEditProject}
+                  canEdit={user && (String(project.createdBy?._id || project.createdBy) === user.id || user.role === "admin")}
                 />
               </div>
             ))}
@@ -286,15 +332,23 @@ function Project() {
         )}
       </div>
 
-      {/* Create Project Modal */}
+      {/* Create / Update Project Modal */}
       <Modal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="Add Project to Work On"
+        onClose={() => {
+          setShowModal(false);
+          setEditingProject(null);
+        }}
+        title={editingProject ? "Update Project Workspace" : "Add Project to Work On"}
       >
         <form
           onSubmit={handleCreateSubmit}
         >
+          {editingProject && (
+            <div className="alert alert-info py-2 small mb-3">
+              Updating existing project workspace. All changes will apply directly to this project card.
+            </div>
+          )}
           {/* Team / Hackathon selector */}
           {myTeams.length > 0 && (
             <div
@@ -499,7 +553,10 @@ function Project() {
             <button
               type="button"
               className="btn btn-outline-secondary"
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                setEditingProject(null);
+              }}
             >
               Cancel
             </button>
@@ -509,7 +566,7 @@ function Project() {
               disabled={creating}
               className="btn btn-primary-custom fw-semibold"
             >
-              {creating ? "Launching..." : "Launch Project Workspace"}
+              {creating ? "Saving..." : editingProject ? "Update Project Workspace" : "Launch Project Workspace"}
             </button>
           </div>
         </form>

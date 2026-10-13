@@ -34,6 +34,7 @@ app.use("/api/invitations", require("./routes/invitations"));
 app.use("/api/teammates", require("./routes/teammates"));
 app.use("/api/projects", require("./routes/projects"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/pathfinder", require("./routes/pathfinder"));
 
 // Global Error Handler Middleware
 app.use((err, req, res, next) => {

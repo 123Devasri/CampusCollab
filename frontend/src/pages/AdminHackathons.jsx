@@ -136,22 +136,8 @@ function AdminHackathons() {
         className="container"
       >
         <div
-          className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"
+          className="d-flex justify-content-end mb-3"
         >
-          <div>
-            <h3
-              className="fw-bold text-primary mb-1"
-            >
-              Admin Hackathon Management
-            </h3>
-
-            <p
-              className="text-muted mb-0 small"
-            >
-              Verify, publish, and manage official hackathons displayed to students.
-            </p>
-          </div>
-
           <button
             onClick={handleOpenCreate}
             className="btn btn-primary-custom fw-semibold"

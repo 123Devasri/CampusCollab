@@ -72,17 +72,18 @@ const seedSkillsTaxonomy = async () => {
   }
 };
 
-// Ensure the single platform admin exists (no mock students or mock hackathons)
+// Ensure the single platform admin exists (admin@campuscollab.edu / admin123)
 const seedSingleAdmin = async () => {
   try {
-    const adminExists = await User.findOne({ role: "admin" });
-    if (!adminExists) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash("123456", salt);
+    const adminEmail = "admin@campuscollab.edu";
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash("admin123", salt);
 
+    let admin = await User.findOne({ email: adminEmail });
+    if (!admin) {
       await User.create({
         name: "Campus Administrator",
-        email: "admin@campuscollab.edu",
+        email: adminEmail,
         password: hashedPassword,
         college: "Campus University",
         course: "Administration",
@@ -92,7 +93,11 @@ const seedSingleAdmin = async () => {
         skills: ["Administration", "Event Management", "Full Stack"],
         role: "admin"
       });
-      console.log("Initialized single Platform Administrator (admin@campuscollab.edu).");
+      console.log("Initialized Platform Administrator (admin@campuscollab.edu / admin123).");
+    } else {
+      admin.password = hashedPassword;
+      admin.role = "admin";
+      await admin.save();
     }
   } catch (err) {
     console.error("Error initializing single admin:", err.message);

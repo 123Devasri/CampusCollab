@@ -32,19 +32,33 @@ router.get("/", async (req, res) => {
       .populate("createdBy", "name primaryRole avatar")
       .populate("team", "name")
       .populate("hackathon", "name")
-      .sort({ createdAt: -1 });
+      .sort({ updatedAt: -1, createdAt: -1 });
 
-    res.json(projects);
+    // Deduplicate: Each unique project gets exactly one card, preserving all distinct project cards
+    const uniqueMap = new Map();
+    for (const p of projects) {
+      const normalizedTitle = (p.title || "").trim().toLowerCase().replace(/\s+\(workspace\)$/i, "");
+      const teamId = p.team ? String(p.team._id || p.team) : null;
+      const key = teamId ? `team_${teamId}_${normalizedTitle}` : `title_${normalizedTitle}`;
+
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, p);
+      }
+    }
+
+    const dedupedProjects = Array.from(uniqueMap.values());
+    res.json(dedupedProjects);
   } catch (error) {
     console.error("Fetch Projects Error:", error);
     res.status(500).json({ message: "Failed to fetch projects." });
   }
 });
 
-// POST /api/projects - Create a new project
+// POST /api/projects - Create or update project (one card per unique project)
 router.post("/", authenticate, async (req, res) => {
   try {
     const {
+      projectId,
       title,
       description,
       teamId,
@@ -61,8 +75,64 @@ router.post("/", authenticate, async (req, res) => {
       return res.status(400).json({ message: "Please provide Project Title and Description." });
     }
 
+    // Check if an existing project card should be updated instead of creating a duplicate
+    let existingProject = null;
+
+    if (projectId) {
+      existingProject = await Project.findById(projectId);
+    }
+
+    if (!existingProject && title) {
+      const cleanTitle = title.trim();
+      const escaped = cleanTitle.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const titleRegex = new RegExp(`^${escaped}(\\s*\\(workspace\\))?$`, "i");
+
+      if (teamId) {
+        existingProject = await Project.findOne({
+          team: teamId,
+          title: { $regex: titleRegex }
+        });
+      }
+
+      if (!existingProject) {
+        existingProject = await Project.findOne({
+          createdBy: req.user.id,
+          title: { $regex: titleRegex }
+        });
+      }
+    }
+
+    // If an existing project is found, update that one card!
+    if (existingProject) {
+      existingProject.title = title.trim();
+      existingProject.description = description;
+      if (teamId) existingProject.team = teamId;
+      if (hackathonId) existingProject.hackathon = hackathonId;
+      if (role) existingProject.role = role;
+      if (Array.isArray(techStack)) existingProject.techStack = techStack;
+      if (githubUrl !== undefined) existingProject.githubUrl = githubUrl;
+      if (liveUrl !== undefined) existingProject.liveUrl = liveUrl;
+      if (status) existingProject.status = status;
+      if (Array.isArray(requiredRoles) && requiredRoles.length > 0) {
+        existingProject.requiredRoles = requiredRoles;
+      }
+
+      await existingProject.save();
+
+      const populated = await Project.findById(existingProject._id)
+        .populate("createdBy", "name primaryRole")
+        .populate("team", "name");
+
+      return res.status(200).json({
+        message: `Project '${existingProject.title}' updated successfully.`,
+        project: populated,
+        isUpdated: true
+      });
+    }
+
+    // Otherwise create new unique project
     const newProject = await Project.create({
-      title,
+      title: title.trim(),
       description,
       createdBy: req.user.id,
       team: teamId || null,
@@ -81,11 +151,12 @@ router.post("/", authenticate, async (req, res) => {
 
     res.status(201).json({
       message: "Project created successfully!",
-      project: populated
+      project: populated,
+      isUpdated: false
     });
   } catch (error) {
-    console.error("Create Project Error:", error);
-    res.status(500).json({ message: "Failed to create project. " + error.message });
+    console.error("Create/Update Project Error:", error);
+    res.status(500).json({ message: "Failed to save project. " + error.message });
   }
 });
 

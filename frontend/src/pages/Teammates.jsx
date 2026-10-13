@@ -22,7 +22,7 @@ function Teammates() {
   const [sendingInvite, setSendingInvite] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const fetchStudents = async () => {
@@ -107,6 +107,14 @@ function Teammates() {
     }
   };
 
+  // Exclude current logged in student so they cannot add themselves to a team
+  const currentUserId = user?.id || user?._id;
+  const filteredStudents = students.filter((s) => {
+    if (!currentUserId && !user?.email) return true;
+    const isSelf = String(s._id) === String(currentUserId) || (user?.email && s.email?.toLowerCase() === user?.email?.toLowerCase());
+    return !isSelf;
+  });
+
   return (
     <div
       className="teammates-page py-4"
@@ -114,24 +122,7 @@ function Teammates() {
       <div
         className="container"
       >
-        {/* Header */}
-        <div
-          className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"
-        >
-          <div>
-            <h3
-              className="fw-bold text-primary mb-1"
-            >
-              Teammate Discovery
-            </h3>
 
-            <p
-              className="text-muted mb-0 small"
-            >
-              Discover student developers, check complementary skill sets, view contact details, and invite them to your squad.
-            </p>
-          </div>
-        </div>
 
         {successMsg && (
           <div
@@ -282,11 +273,11 @@ function Teammates() {
         {/* Student Cards Grid */}
         {loading ? (
           <LoadingState message="Searching student developers..." />
-        ) : students.length > 0 ? (
+        ) : filteredStudents.length > 0 ? (
           <div
             className="row g-4"
           >
-            {students.map((student) => (
+            {filteredStudents.map((student) => (
               <div
                 key={student._id}
                 className="col-md-6 col-lg-4"
@@ -301,7 +292,7 @@ function Teammates() {
         ) : (
           <EmptyState
             title="No Students Found"
-            message="No registered students match your search criteria. Try adjusting your keywords."
+            message="No other registered students match your search criteria. Try adjusting your keywords."
             actionText="Clear Filters"
             onActionClick={() => {
               setSearch("");
